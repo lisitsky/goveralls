@@ -154,6 +154,9 @@ func getCoverage() ([]*SourceFile, error) {
 		}
 
 		pfs, err := cover.ParseProfiles(f.Name())
+		if *debug {
+			log.Printf("Parsed profiles \n", pfs)
+		}
 		if err != nil {
 			return nil, err
 		}
