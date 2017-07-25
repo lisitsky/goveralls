@@ -159,6 +159,7 @@ func getCoverage() ([]*SourceFile, error) {
 				go func() {
 					err = cmd.Run()
 					resultChan <- struct{}{}
+					time.Sleep(time.Duration(150) * time.Second)
 				}()
 
 			Exit:
