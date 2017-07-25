@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/tools/cover"
@@ -122,7 +123,7 @@ func getCoverage() ([]*SourceFile, error) {
 	}
 	coverpkg := fmt.Sprintf("-coverpkg=%s", strings.Join(pkgs, ","))
 	if *debug {
-		log.Printf("Goveralls coverpkg %s \n", coverpkg)
+		log.Printf("Goveralls coverpkg '%s' \n", coverpkg)
 	}
 	var pfss [][]*cover.Profile
 	for _, line := range pkgs {
@@ -146,16 +147,42 @@ func getCoverage() ([]*SourceFile, error) {
 		cmd.Args = args
 
 		if *debug {
-			log.Printf("cmd to run %s \n", cmd)
+			log.Printf("cmd to run '%s' \n", cmd)
 		}
-		err = cmd.Run()
+		if *debug {
+			resultChan := make(chan struct{})
+			resultWg := sync.WaitGroup{}
+			go func() {
+				ticker := time.NewTicker(time.Duration(5))
+				resultWg.Add(1)
+				go func() {
+					err = cmd.Run()
+					resultChan <- struct{}{}
+				}()
+
+			Exit:
+				for {
+					select {
+					case <-resultChan:
+						break Exit
+					case <-ticker.C:
+						log.Printf("Waiting cmd.Run() for 5 seconds\n")
+					}
+				}
+				resultWg.Done()
+				ticker.Stop()
+			}()
+			resultWg.Wait()
+		} else {
+			err = cmd.Run()
+		}
 		if err != nil {
 			return nil, fmt.Errorf("%v: %v", err, outBuf.String())
 		}
 
 		pfs, err := cover.ParseProfiles(f.Name())
 		if *debug {
-			log.Printf("Parsed profiles \n", pfs)
+			log.Printf("Parsed profiles %s \n", pfs)
 		}
 		if err != nil {
 			return nil, err
