@@ -368,7 +368,7 @@ func process() error {
 	defer res.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return log.Errorf("Unable to read response body from coveralls: %s", err)
+		return fmt.Errorf("Unable to read response body from coveralls: %s", err)
 	}
 
 	if res.StatusCode >= http.StatusInternalServerError && *shallow {
@@ -377,11 +377,11 @@ func process() error {
 	}
 
 	if res.StatusCode != 200 {
-		return log.Errorf("Bad response status from coveralls: %d\n%s", res.StatusCode, bodyBytes)
+		return fmt.Errorf("Bad response status from coveralls: %d\n%s", res.StatusCode, bodyBytes)
 	}
 	var response Response
 	if err = json.Unmarshal(bodyBytes, &response); err != nil {
-		return log.Errorf("Unable to unmarshal response JSON from coveralls: %s\n%s", err, bodyBytes)
+		return fmt.Errorf("Unable to unmarshal response JSON from coveralls: %s\n%s", err, bodyBytes)
 	}
 	if response.Error {
 		return errors.New(response.Message)
