@@ -203,6 +203,9 @@ func process() error {
 		os.Exit(1)
 	}
 
+	if *debug {
+		log.Printf("Starting goveralls...\n")
+	}
 	//
 	// Setup PATH environment variable
 	//
@@ -216,6 +219,9 @@ func process() error {
 		}
 	}
 	os.Setenv("PATH", strings.Join(paths, string(filepath.ListSeparator)))
+	if *debug {
+		log.Printf("Goveralls paths %s \n", paths)
+	}
 
 	//
 	// Initialize Job
@@ -227,6 +233,9 @@ func process() error {
 		jobId = circleCiJobId
 	} else if appveyorJobId := os.Getenv("APPVEYOR_JOB_ID"); appveyorJobId != "" {
 		jobId = appveyorJobId
+	}
+	if *debug {
+		log.Printf("Goveralls jobId %s \n", jobId)
 	}
 
 	if *repotoken == "" {
@@ -243,6 +252,9 @@ func process() error {
 		pullRequest = regexp.MustCompile(`[0-9]+$`).FindString(prURL)
 	} else if prNumber := os.Getenv("APPVEYOR_PULL_REQUEST_NUMBER"); prNumber != "" {
 		pullRequest = prNumber
+	}
+	if *debug {
+		log.Printf("Goveralls pullRequest %s \n", pullRequest)
 	}
 
 	sourceFiles, err := getCoverage()
@@ -304,7 +316,11 @@ func process() error {
 
 	params := make(url.Values)
 	params.Set("json", string(b))
-	res, err := http.PostForm(*endpoint+"/api/v1/jobs", params)
+	postUrl := *endpoint + "/api/v1/jobs"
+	if *debug {
+		fmt.Printf("Post to coveralls API: URL %s, params %s", postUrl, params)
+	}
+	res, err := http.PostForm(postUrl, params)
 	if err != nil {
 		return err
 	}
