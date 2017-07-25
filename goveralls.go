@@ -153,7 +153,8 @@ func getCoverage() ([]*SourceFile, error) {
 			resultChan := make(chan struct{})
 			resultWg := sync.WaitGroup{}
 			go func() {
-				ticker := time.NewTicker(time.Duration(5))
+				timeStart := time.Now()
+				ticker := time.NewTicker(time.Duration(5) * time.Second)
 				resultWg.Add(1)
 				go func() {
 					err = cmd.Run()
@@ -166,7 +167,7 @@ func getCoverage() ([]*SourceFile, error) {
 					case <-resultChan:
 						break Exit
 					case <-ticker.C:
-						log.Printf("Waiting cmd.Run() for 5 seconds\n")
+						log.Printf("Waiting cmd.Run() for %s seconds\n", time.Since(timeStart))
 					}
 				}
 				resultWg.Done()
