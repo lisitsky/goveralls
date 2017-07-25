@@ -154,11 +154,11 @@ func getCoverage() ([]*SourceFile, error) {
 			resultWg := sync.WaitGroup{}
 			go func() {
 				timeStart := time.Now()
-				ticker := time.NewTicker(time.Duration(5) * time.Second)
+				ticker := time.NewTicker(5 * time.Second)
 				resultWg.Add(1)
 				go func() {
 					err = cmd.Run()
-					time.Sleep(time.Duration(150) * time.Second)
+					time.Sleep(150 * time.Second)
 					resultChan <- struct{}{}
 				}()
 
