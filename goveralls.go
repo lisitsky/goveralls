@@ -158,8 +158,8 @@ func getCoverage() ([]*SourceFile, error) {
 				resultWg.Add(1)
 				go func() {
 					err = cmd.Run()
-					resultChan <- struct{}{}
 					time.Sleep(time.Duration(150) * time.Second)
+					resultChan <- struct{}{}
 				}()
 
 			Exit:
@@ -168,7 +168,7 @@ func getCoverage() ([]*SourceFile, error) {
 					case <-resultChan:
 						break Exit
 					case <-ticker.C:
-						log.Printf("Waiting cmd.Run() for %s seconds\n", time.Since(timeStart))
+						log.Printf("Waiting for cmd.Run() for %s seconds\n", time.Since(timeStart))
 					}
 				}
 				resultWg.Done()
