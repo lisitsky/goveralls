@@ -121,6 +121,9 @@ func getCoverage() ([]*SourceFile, error) {
 		return nil, err
 	}
 	coverpkg := fmt.Sprintf("-coverpkg=%s", strings.Join(pkgs, ","))
+	if *debug {
+		log.Printf("Goveralls coverpkg %s \n", coverpkg)
+	}
 	var pfss [][]*cover.Profile
 	for _, line := range pkgs {
 		f, err := ioutil.TempFile("", "goveralls")
@@ -142,6 +145,9 @@ func getCoverage() ([]*SourceFile, error) {
 		args = append(args, line)
 		cmd.Args = args
 
+		if *debug {
+			log.Printf("cmd to run %s \n", cmd)
+		}
 		err = cmd.Run()
 		if err != nil {
 			return nil, fmt.Errorf("%v: %v", err, outBuf.String())
@@ -268,6 +274,9 @@ func process() error {
 		ServicePullRequest: pullRequest,
 		Git:                collectGitInfo(),
 		SourceFiles:        sourceFiles,
+	}
+	if *debug {
+		log.Printf("Goveralls job details %s \n", j)
 	}
 
 	// Only include a job ID if it's known, otherwise, Coveralls looks
