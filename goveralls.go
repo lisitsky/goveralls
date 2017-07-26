@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
+	//"sync"
 	"time"
 
 	"golang.org/x/tools/cover"
@@ -150,34 +150,41 @@ func getCoverage() ([]*SourceFile, error) {
 			log.Printf("cmd to run '%s' \n", cmd)
 		}
 		if *debug {
+			log.Printf("Goveralls runs cmd in separate goroutine\n")
 			resultChan := make(chan struct{})
-			resultWg := sync.WaitGroup{}
+			timeStart := time.Now()
+			log.Printf("Goveralls goroutine started at: %v", timeStart)
+			ticker := time.NewTicker(5 * time.Second)
 			go func() {
-				timeStart := time.Now()
-				ticker := time.NewTicker(5 * time.Second)
-				resultWg.Add(1)
-				go func() {
-					err = cmd.Run()
-					time.Sleep(150 * time.Second)
-					resultChan <- struct{}{}
-				}()
+				log.Printf("Goveralls cmd.Run started")
+				err = cmd.Run()
+				log.Printf("Goveralls cmd.Run finished")
+				resultChan <- struct{}{}
+			}()
 
-			Exit:
-				for {
-					select {
-					case <-resultChan:
+			var i int
+		Exit:
+			for {
+				log.Printf("wait cycle %v", i)
+				i++
+				select {
+				case <-resultChan:
+					log.Printf("Got from resultChan")
+					break Exit
+				case <-ticker.C:
+					log.Printf("Waiting for cmd.Run() for %s seconds\n", time.Since(timeStart))
+					if time.Since(timeStart) > time.Duration(20*time.Second) {
+						log.Printf("Waiting for cmd.Run to finish too long... exiting")
 						break Exit
-					case <-ticker.C:
-						log.Printf("Waiting for cmd.Run() for %s seconds\n", time.Since(timeStart))
 					}
 				}
-				resultWg.Done()
-				ticker.Stop()
-			}()
-			resultWg.Wait()
+			}
+			ticker.Stop()
+			log.Printf("Goveralls outBuf: %v", outBuf)
 		} else {
 			err = cmd.Run()
 		}
+
 		if err != nil {
 			return nil, fmt.Errorf("%v: %v", err, outBuf.String())
 		}
