@@ -162,18 +162,15 @@ func getCoverage() ([]*SourceFile, error) {
 				resultChan <- struct{}{}
 			}()
 
-			var i int
 		Exit:
 			for {
-				log.Printf("wait cycle %v", i)
-				i++
 				select {
 				case <-resultChan:
 					log.Printf("Got from resultChan")
 					break Exit
 				case <-ticker.C:
 					log.Printf("Waiting for cmd.Run() for %s seconds\n", time.Since(timeStart))
-					if time.Since(timeStart) > time.Duration(20*time.Second) {
+					if time.Since(timeStart) > time.Duration(300*time.Second) {
 						log.Printf("Waiting for cmd.Run to finish too long... exiting")
 						break Exit
 					}
